@@ -193,8 +193,11 @@ num_vert = 1
 
 display = Screen(matrix_rows, matrix_columns, num_hor, num_vert)
 
+_shutdown = False
+
 def on_message(client, userdata, message):
   global display
+  global _shutdown
 
   #print "Message Callback"
 
@@ -218,6 +221,9 @@ def on_message(client, userdata, message):
     display.set_y_spread(int(message.payload))
   elif message.topic == "display/get_size":
     display.send_size()
+  elif message.topic == "shutdown":
+    print("received shutdown")
+    _shutdown = True
   else:
     print "unknown topic: "+message.topic
 
@@ -237,6 +243,7 @@ client.subscribe("display/freq/pixels_per_bin")
 client.subscribe("display/get_size")
 client.subscribe("display/time/color")
 client.subscribe("display/time/y_spread")
+client.subscribe("shutdown")
 
 display.set_client(client)
 display.send_size()
@@ -245,6 +252,8 @@ display.send_size()
 try:
   print("Press CTRL-C to stop")
   while True:
+    if (_shutdown == True):
+      exit(0)
 
     print "click!"
     time.sleep(1)

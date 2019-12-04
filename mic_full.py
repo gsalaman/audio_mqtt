@@ -37,6 +37,8 @@ total_rows = 32
 total_columns = 32
 sample_bias = total_rows / 2 
 
+_shutdown = False
+
 def on_message(client, userdata, message):
   global total_rows
   global total_columns
@@ -46,6 +48,7 @@ def on_message(client, userdata, message):
   global num_freq_bins
   global freq_points_per_bin
   global freq_scale
+  global _shutdown
 
   if message.topic == "display/columns":
     total_columns = int(message.payload)
@@ -111,6 +114,10 @@ def on_message(client, userdata, message):
     freq_points_per_bin = int(message.payload)
     print "Setting freq_points_per_bin to "+message.payload
 
+  elif message.topic == "shutdown":
+    print("Shutdown message received");
+    _shutdown = True
+
   else:
     print("Unknown message on display topic:"+message.topic)
     print("Payload: "+message.payload)
@@ -129,11 +136,15 @@ client.subscribe("display/columns")
 client.subscribe("display/rows")
 client.subscribe("display/time/#")
 client.subscribe("display/freq/#")
+client.subscribe("shutdown")
 client.publish("display/get_size","")
 
 try:
   print("Hit ctl-c to exit")
   while (True):
+    if (_shutdown == True):
+      exit(0)
+
     data = stream.read(CHUNK,exception_on_overflow = False)
     data_int = struct.unpack(str(CHUNK) +'h', data)  
 
